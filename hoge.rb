@@ -1,2 +1,1 @@
 foo('aaaa')
-eval('aaaaaa')
