@@ -15,7 +15,7 @@ jobs:
         run: |
           wget -O - -q https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh \
             | sh -s -- -b $(pwd)
-      - name: Run semgrep and reviewdog
+      - name: Run semgrep and reviewdog(ERROR)
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -23,7 +23,24 @@ jobs:
             -v $(pwd):/workdir \
             --workdir /workdir \
             returntocorp/semgrep:8b25353370bc1b35dd4a4fb40ed02abc69a2e0dd \
-            --json -f /workdir/.semgrep /workdir \
+            --severity ERROR --error --json -f /workdir/.semgrep /workdir \
+          | jq -r '.results[] | "\(.path):\(.start.line):\(.start.col): \(.extra.message)"' \
+          | sed 's#^/workdir/##' \
+          | ./reviewdog \
+            -efm="%f:%l:%c: %m" \
+            -diff="git diff ${{ github.event.pull_request.base.ref }}" \
+            -level=error \
+            -reporter=github-pr-review
+        shell: bash
+      - name: Run semgrep and reviewdog(WARNING)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run \
+            -v $(pwd):/workdir \
+            --workdir /workdir \
+            returntocorp/semgrep:8b25353370bc1b35dd4a4fb40ed02abc69a2e0dd \
+            --severity WARNING --json -f /workdir/.semgrep /workdir \
           | jq -r '.results[] | "\(.path):\(.start.line):\(.start.col): \(.extra.message)"' \
           | sed 's#^/workdir/##' \
           | ./reviewdog \
