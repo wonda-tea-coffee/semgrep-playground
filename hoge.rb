@@ -1,4 +1,1 @@
-eval(params[:input]) # Something technically wrong!!!!!!!!!!!
-foo('うおお')
-bar('うおお')
-eval('はい')
+# this is perfect secure code
