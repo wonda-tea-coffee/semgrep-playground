@@ -6,3 +6,10 @@ rules:
     気をつけてね
   pattern: bar(...)
   severity: INFO
+- id: uoo2
+  languages:
+    - ruby
+  message: |
+    犯罪やぞ、分かってんのか
+  pattern: foo(...)
+  severity: WARNING
