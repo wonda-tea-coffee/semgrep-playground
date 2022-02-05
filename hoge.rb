@@ -1,1 +1,1 @@
-eval(params[:input])
+# this is perfect secure code

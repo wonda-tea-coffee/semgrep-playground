@@ -1,18 +1,55 @@
-name: Semgrep
+name: Run security tests
 
 on:
-  pull_request: {}
+  pull_request:
 
 jobs:
-  semgrep:
-    name: Scan
+  security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: returntocorp/semgrep-action@v1
-        with:
-          config: >- # more at semgrep.dev/explore
-            p/security-audit
-            p/secrets
+      - name: Set up reviewdog
+        run: |
+          wget -O - -q https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh \
+            | sh -s -- -b $(pwd)
+      - name: Run semgrep and reviewdog(WARNING)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run \
+            -v $(pwd):/workdir \
+            --workdir /workdir \
+            returntocorp/semgrep:8b25353370bc1b35dd4a4fb40ed02abc69a2e0dd \
+            --severity WARNING --json -f /workdir/.semgrep /workdir \
+          | jq -r '.results[] | "\(.path):\(.start.line):\(.start.col): \(.extra.message)"' \
+          | sed 's#^/workdir/##' \
+          | ./reviewdog \
+            -efm="%f:%l:%c: %m" \
+            -diff="git diff ${{ github.event.pull_request.base.ref }}" \
+            -level=warning \
+            -reporter=github-pr-review
+      - name: Run semgrep and reviewdog(ERROR)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run \
+            -v $(pwd):/workdir \
+            --workdir /workdir \
+            returntocorp/semgrep:8b25353370bc1b35dd4a4fb40ed02abc69a2e0dd \
+            --severity ERROR --error --json -f /workdir/.semgrep /workdir \
+          | jq -r '.results[] | "\(.path):\(.start.line):\(.start.col): \(.extra.message)"' \
+          | sed 's#^/workdir/##' \
+          | ./reviewdog \
+            -efm="%f:%l:%c: %m" \
+            -diff="git diff ${{ github.event.pull_request.base.ref }}" \
+            -level=error \
+            -reporter=github-pr-review
+        # 下記の設定でコマンド実行の際にpipefailが有効になり、
+        # パイプで繋がれたコマンドで最初に失敗したコマンドの終了値がコマンド全体の終了値となるため、
+        # semgrepの--errorオプションと合わせて使うとジョブをエラーで落とすことができる
+        # @see
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
+        shell: bash
