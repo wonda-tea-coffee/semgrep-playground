@@ -13,3 +13,10 @@ rules:
     犯罪やぞ、分かってんのか
   pattern: foo(...)
   severity: WARNING
+- id: uoo3
+  languages:
+    - ruby
+  message: |
+    大阪やぞ
+  pattern: eval(...)
+  severity: ERROR
