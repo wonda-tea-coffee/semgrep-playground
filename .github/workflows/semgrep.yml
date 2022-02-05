@@ -17,3 +17,4 @@ jobs:
             p/security-audit
             p/secrets
             semgrep-rule.yml
+          auditOn: true
