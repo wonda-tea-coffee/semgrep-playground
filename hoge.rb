@@ -1,1 +1,1 @@
-# this is perfect secure code
+foo('aaaa')
