@@ -1,16 +1,8 @@
 rules:
-- id: uoo1
+- id: uoo
   languages:
     - ruby
   message: |
-    やめておけ
-  pattern: foo(...)
-  severity: WARNING
-
-- id: uoo2
-  languages:
-    - ruby
-  message: |
-    やめておけと言ったろうに
+    気をつけてね
   pattern: bar(...)
   severity: INFO
