@@ -1,1 +1,2 @@
 foo('aaaa')
+eval('aaaaaa')
